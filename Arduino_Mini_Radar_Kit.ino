@@ -12,7 +12,7 @@ int base = 118;               //baseline position
 int scanline = 105;           //Radar scan line length
 Servo baseServo;
 Ucglib_ST7735_18x128x160_HWSPI ucg(/*cd=*/ 9, /*cs=*/ 10, /*reset=*/ 8);
-int lastHitCount = 0;  // number of valid samples from last measurement (0-5)
+int lastHitCount = 0;  // number of valid samples from last measurement (0-10)
 
 
 void setup(void)
@@ -86,10 +86,10 @@ void cls()
 
 int calculateDistance()
 {
-      const int NUM_SAMPLES = 5;
+      const int NUM_SAMPLES = 10;
       const int INTER_SAMPLE_DELAY = 10; // ms between samples
       const int MAX_VALID_CM = 400;      // HC-SR04 hardware max range
-      int samples[NUM_SAMPLES];
+      int samples[10];
       int validCount = 0;
 
       for (int i = 0; i < NUM_SAMPLES; i++) {
@@ -246,11 +246,11 @@ void loop(void)
       distance = calculateDistance();
 
       //Draw a point at the corresponding position according to the measured distance
-      //Color by signal strength: red=strong (4-5 hits), blue=weak (1-3 hits), yellow=edge
+      //Color by signal strength: red=strong (8-10 hits), blue=weak (1-7 hits), yellow=edge
       if (distance != -1) {
         if (distance < 250)
         {
-          if (lastHitCount >= 4)
+          if (lastHitCount >= 8)
             ucg.setColor(255,0,0);      // strong signal — red
           else
             ucg.setColor(0,80,255);     // weak signal — blue
@@ -310,11 +310,11 @@ void loop(void)
       distance = calculateDistance();
 
       //Draw a point at the corresponding position according to the measured distance
-      //Color by signal strength: red=strong (4-5 hits), blue=weak (1-3 hits), yellow=edge
+      //Color by signal strength: red=strong (8-10 hits), blue=weak (1-7 hits), yellow=edge
       if (distance != -1) {
         if (distance < 250)
         {
-          if (lastHitCount >= 4)
+          if (lastHitCount >= 8)
             ucg.setColor(255,0,0);      // strong signal — red
           else
             ucg.setColor(0,80,255);     // weak signal — blue
