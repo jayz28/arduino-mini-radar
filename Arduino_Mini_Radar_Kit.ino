@@ -10,8 +10,9 @@ int Xmax = 160;               //horizontal pixels of the screen
 int Xcent = Xmax / 2;         //Horizontal screen center position
 int base = 118;               //baseline position
 int scanline = 105;           //Radar scan line length
-Servo baseServo; 
+Servo baseServo;
 Ucglib_ST7735_18x128x160_HWSPI ucg(/*cd=*/ 9, /*cs=*/ 10, /*reset=*/ 8);
+int lastHitCount = 0;  // number of valid samples from last measurement (0-5)
 
 
 void setup(void)
@@ -84,19 +85,54 @@ void cls()
 
 
 int calculateDistance()
-{ 
-      long duration;
-      //power off trigPin and wait 2 microseconds
-      digitalWrite(trigPin, LOW); 
-      delayMicroseconds(2);
-      //TrigPin power on delay 10 microseconds and then power off
-      digitalWrite(trigPin, HIGH); 
-      delayMicroseconds(10);
-      digitalWrite(trigPin, LOW);
-      //Reading the echoPin returns the travel time of the sound wave (in microseconds)
-      duration = pulseIn(echoPin, HIGH);
-      //Convert echo time to distance value
-      return duration*0.034/2;
+{
+      const int NUM_SAMPLES = 5;
+      const int INTER_SAMPLE_DELAY = 10; // ms between samples
+      const int MAX_VALID_CM = 400;      // HC-SR04 hardware max range
+      int samples[NUM_SAMPLES];
+      int validCount = 0;
+
+      for (int i = 0; i < NUM_SAMPLES; i++) {
+            long duration;
+            //power off trigPin and wait 2 microseconds
+            digitalWrite(trigPin, LOW);
+            delayMicroseconds(2);
+            //TrigPin power on delay 10 microseconds and then power off
+            digitalWrite(trigPin, HIGH);
+            delayMicroseconds(10);
+            digitalWrite(trigPin, LOW);
+            //Reading the echoPin returns the travel time of the sound wave (in microseconds)
+            duration = pulseIn(echoPin, HIGH);
+            //Convert echo time to distance value
+            int dist = duration * 0.034 / 2;
+
+            // Reject invalid readings: 0 (timeout/no echo) or beyond sensor max
+            if (dist > 0 && dist <= MAX_VALID_CM) {
+                  samples[validCount++] = dist;
+            }
+
+            if (i < NUM_SAMPLES - 1) delay(INTER_SAMPLE_DELAY);
+      }
+
+      // Store hit count for signal strength indication
+      lastHitCount = validCount;
+
+      // No valid samples — all readings were noise/timeout
+      if (validCount == 0) return -1;
+
+      // Sort valid samples (simple insertion sort)
+      for (int i = 1; i < validCount; i++) {
+            int key = samples[i];
+            int j = i - 1;
+            while (j >= 0 && samples[j] > key) {
+                  samples[j + 1] = samples[j];
+                  j--;
+            }
+            samples[j + 1] = key;
+      }
+
+      // Return median
+      return samples[validCount / 2];
 }
 
 void fix_font() 
@@ -208,25 +244,33 @@ void loop(void)
       ucg.setColor(0,200, 0);
       //Get the distance value
       distance = calculateDistance();
-     
+
       //Draw a point at the corresponding position according to the measured distance
-      if (distance < 250)
-      {
-        ucg.setColor(255,0,0);
-        ucg.drawDisc(0.46*distance*cos(radians(x))+Xcent,-(0.46*distance*sin(radians(x)))+base, 1, UCG_DRAW_ALL);
-      }
-      else
-      { //If it is more than 250cm, it is indicated by a yellow painting on the edge area
-        ucg.setColor(255,255,0);
-        ucg.drawDisc(116*cos(radians(x))+Xcent,-116*sin(radians(x))+base, 1, UCG_DRAW_ALL);
+      //Color by signal strength: red=strong (4-5 hits), blue=weak (1-3 hits), yellow=edge
+      if (distance != -1) {
+        if (distance < 250)
+        {
+          if (lastHitCount >= 4)
+            ucg.setColor(255,0,0);      // strong signal — red
+          else
+            ucg.setColor(0,80,255);     // weak signal — blue
+          ucg.drawDisc(0.46*distance*cos(radians(x))+Xcent,-(0.46*distance*sin(radians(x)))+base, 1, UCG_DRAW_ALL);
+        }
+        else
+        { //If it is more than 250cm, it is indicated by a yellow painting on the edge area
+          ucg.setColor(255,255,0);
+          ucg.drawDisc(116*cos(radians(x))+Xcent,-116*sin(radians(x))+base, 1, UCG_DRAW_ALL);
+        }
       }
 
 
-      //Debug code, output angle and range value
+      //Debug code, output angle, range, and hit count
       Serial.print("Degree:  ");
       Serial.print(x);
       Serial.print("    ,Distance:   ");
-      Serial.println(distance);
+      Serial.print(distance);
+      Serial.print("    ,Hits:   ");
+      Serial.println(lastHitCount);
 
 
       if (x > 70 and x < 110)  fix_font();  //When the scan line and the number coincide, redraw the number
@@ -266,22 +310,30 @@ void loop(void)
       distance = calculateDistance();
 
       //Draw a point at the corresponding position according to the measured distance
-      if (distance < 250)
-      {
-        ucg.setColor(255,0,0);
-        ucg.drawDisc(0.46*distance*cos(radians(x))+Xcent,-(0.46*distance*sin(radians(x)))+base, 1, UCG_DRAW_ALL);
-      }
-      else
-      { //If it is more than 250cm, it is indicated by a yellow painting on the edge area
-        ucg.setColor(255,255,0);
-        ucg.drawDisc(116*cos(radians(x))+Xcent,-116*sin(radians(x))+base, 1, UCG_DRAW_ALL);
+      //Color by signal strength: red=strong (4-5 hits), blue=weak (1-3 hits), yellow=edge
+      if (distance != -1) {
+        if (distance < 250)
+        {
+          if (lastHitCount >= 4)
+            ucg.setColor(255,0,0);      // strong signal — red
+          else
+            ucg.setColor(0,80,255);     // weak signal — blue
+          ucg.drawDisc(0.46*distance*cos(radians(x))+Xcent,-(0.46*distance*sin(radians(x)))+base, 1, UCG_DRAW_ALL);
+        }
+        else
+        { //If it is more than 250cm, it is indicated by a yellow painting on the edge area
+          ucg.setColor(255,255,0);
+          ucg.drawDisc(116*cos(radians(x))+Xcent,-116*sin(radians(x))+base, 1, UCG_DRAW_ALL);
+        }
       }
 
-      //Debug code, output angle and range value
+      //Debug code, output angle, range, and hit count
       Serial.print("Degree:  ");
       Serial.print(x);
       Serial.print("    ,Distance:   ");
-      Serial.println(distance);
+      Serial.print(distance);
+      Serial.print("    ,Hits:   ");
+      Serial.println(lastHitCount);
 
       if (x > 70 and x < 110)  fix_font();  //When the scan line and the number coincide, redraw the number
 
