@@ -103,13 +103,15 @@ void fix_font()
 {
       ucg.setColor(0, 180, 0);
       ucg.setPrintPos(70,128-120+7);
+      ucg.print("250cm");
+      ucg.setPrintPos(70,128-97+7);
+      ucg.print("200cm");
+      ucg.setPrintPos(70,128-74+7);
+      ucg.print("150cm");
+      ucg.setPrintPos(70,128-51+7);
       ucg.print("100cm");
-      ucg.setPrintPos(70,128-85-11);
-      ucg.print("75cm");
-      ucg.setPrintPos(70,128-60-8);
+      ucg.setPrintPos(70,128-28+7);
       ucg.print("50cm");
-      ucg.setPrintPos(70,128-35-4);
-      ucg.print("25cm");
 }
 
 void fix()
@@ -120,12 +122,14 @@ void fix()
       ucg.drawDisc(Xcent, base+1, 3, UCG_DRAW_ALL); 
       ucg.drawCircle(Xcent, base+1, 115, UCG_DRAW_UPPER_LEFT);
       ucg.drawCircle(Xcent, base+1, 115, UCG_DRAW_UPPER_RIGHT);
-      ucg.drawCircle(Xcent, base+1, 86, UCG_DRAW_UPPER_LEFT);
-      ucg.drawCircle(Xcent, base+1, 86, UCG_DRAW_UPPER_RIGHT);
-      ucg.drawCircle(Xcent, base+1, 58, UCG_DRAW_UPPER_LEFT);
-      ucg.drawCircle(Xcent, base+1, 58, UCG_DRAW_UPPER_RIGHT);
-      ucg.drawCircle(Xcent, base+1, 29, UCG_DRAW_UPPER_LEFT);
-      ucg.drawCircle(Xcent, base+1, 29, UCG_DRAW_UPPER_RIGHT);
+      ucg.drawCircle(Xcent, base+1, 92, UCG_DRAW_UPPER_LEFT);
+      ucg.drawCircle(Xcent, base+1, 92, UCG_DRAW_UPPER_RIGHT);
+      ucg.drawCircle(Xcent, base+1, 69, UCG_DRAW_UPPER_LEFT);
+      ucg.drawCircle(Xcent, base+1, 69, UCG_DRAW_UPPER_RIGHT);
+      ucg.drawCircle(Xcent, base+1, 46, UCG_DRAW_UPPER_LEFT);
+      ucg.drawCircle(Xcent, base+1, 46, UCG_DRAW_UPPER_RIGHT);
+      ucg.drawCircle(Xcent, base+1, 23, UCG_DRAW_UPPER_LEFT);
+      ucg.drawCircle(Xcent, base+1, 23, UCG_DRAW_UPPER_RIGHT);
       ucg.drawLine(0, base+1, Xmax,base+1);
      
       ucg.setColor(0, 120, 0);
@@ -206,30 +210,30 @@ void loop(void)
       distance = calculateDistance();
      
       //Draw a point at the corresponding position according to the measured distance
-      if (distance < 100)
+      if (distance < 250)
       {
         ucg.setColor(255,0,0);
-        ucg.drawDisc(1.15*distance*cos(radians(x))+Xcent,-(1.15*distance*sin(radians(x)))+base, 1, UCG_DRAW_ALL);
+        ucg.drawDisc(0.46*distance*cos(radians(x))+Xcent,-(0.46*distance*sin(radians(x)))+base, 1, UCG_DRAW_ALL);
       }
       else
-      { //If it is more than 1 meter, it is indicated by a yellow painting on the edge area
+      { //If it is more than 250cm, it is indicated by a yellow painting on the edge area
         ucg.setColor(255,255,0);
         ucg.drawDisc(116*cos(radians(x))+Xcent,-116*sin(radians(x))+base, 1, UCG_DRAW_ALL);
       }
-    
-           
+
+
       //Debug code, output angle and range value
       Serial.print("Degree:  ");
-      Serial.print(x); 
+      Serial.print(x);
       Serial.print("    ,Distance:   ");
-      Serial.println(distance); 
-     
+      Serial.println(distance);
+
 
       if (x > 70 and x < 110)  fix_font();  //When the scan line and the number coincide, redraw the number
- 
+
       ucg.setColor(0,0,155,  0);
       ucg.setPrintPos(0,126);
-      ucg.print("DEG: "); 
+      ucg.print("DEG: ");
       ucg.setPrintPos(24,126);
       ucg.print(x);
       ucg.print("  ");
@@ -262,28 +266,28 @@ void loop(void)
       distance = calculateDistance();
 
       //Draw a point at the corresponding position according to the measured distance
-      if (distance < 100)
+      if (distance < 250)
       {
         ucg.setColor(255,0,0);
-        ucg.drawDisc(1.15*distance*cos(radians(x))+Xcent,-(1.15*distance*sin(radians(x)))+base, 1, UCG_DRAW_ALL);
+        ucg.drawDisc(0.46*distance*cos(radians(x))+Xcent,-(0.46*distance*sin(radians(x)))+base, 1, UCG_DRAW_ALL);
       }
       else
-      { //If it is more than 1 meter, it is indicated by a yellow painting on the edge area
+      { //If it is more than 250cm, it is indicated by a yellow painting on the edge area
         ucg.setColor(255,255,0);
         ucg.drawDisc(116*cos(radians(x))+Xcent,-116*sin(radians(x))+base, 1, UCG_DRAW_ALL);
       }
-           
+
       //Debug code, output angle and range value
       Serial.print("Degree:  ");
-      Serial.print(x); 
+      Serial.print(x);
       Serial.print("    ,Distance:   ");
-      Serial.println(distance); 
-     
+      Serial.println(distance);
+
       if (x > 70 and x < 110)  fix_font();  //When the scan line and the number coincide, redraw the number
-      
+
       ucg.setColor(0,0,155,  0);
       ucg.setPrintPos(0,126);
-      ucg.print("DEG: "); 
+      ucg.print("DEG: ");
       ucg.setPrintPos(24,126);
       ucg.print(x);
       ucg.print("   ");
